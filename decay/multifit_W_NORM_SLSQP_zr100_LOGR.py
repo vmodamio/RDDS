@@ -42,8 +42,11 @@ from scipy.optimize import minimize
 from scipy.optimize import LinearConstraint
 from scipy.linalg import cholesky
 #import matplotlib
-#matplotlib.rcParams["text.usetex"] = True
 import matplotlib.pyplot as plt
+
+#from matplotlib import rc
+#plt.rcParams["text.usetex"] = True
+#rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 
 ## DATA
 xT = np.array([ 30, 52, 89, 155, 264, 450, 776, 1170, 1776, 2651 ])
@@ -61,7 +64,7 @@ yRt = (yR +feeding*yRf)/(1.0+feeding)
 #for i,dis in enumerate(xT):
 #    print(f'{dis}   {10000.0*testF[i]}   100.0   {10000.0*(1.0-testF[i])}    100.0')
 
-tauguess = 30.0
+tauguess = 5.0
 terr = 1.0
 clight = 299.79 # um/ps
 beta0 = 0.103
@@ -70,10 +73,11 @@ ve = 1.0
 ## Contruct the spline basis 
 #order = 3
 #upperL = 72.85
-order = 5
+order = 4
 #upperL = 72.9
-upperL = 72.9
-mesh = np.linspace(0,upperL,4) ## define the internal knots, lower and upper limit
+upperL = 73
+#mesh = np.linspace(0,upperL,4) ## define the internal knots, lower and upper limit
+mesh = np.append([0.0], np.geomspace(4,upperL,4)) ## define the internal knots, lower and upper limit
 ftol = 1e-8
 #mesh = np.array([0,100,500,1000,3000])
 ## note: that the real number of splines (basis) is mesh + order -2 (6 in this case, like the weights)
@@ -304,16 +308,17 @@ for knot in mesh:
     ax_fed.axvline(x=knot, color='#878787', linestyle='--', linewidth=1)
     ax_dec.axvline(x=knot, color='#878787', linestyle='--', linewidth=1)
 
-ax_fed.errorbar(F.x, F.y, xerr= F.xerr, yerr= F.yerr, fmt='o', markersize=2, capsize=3, linewidth=1, color='black')
 ax_fed.plot(xgrid, np.exp(-splines.Itotal(F.weights,0)), color='orangered')
+ax_fed.errorbar(F.x, F.y, xerr= F.xerr, yerr= F.yerr, fmt='o', markersize=2, capsize=3, linewidth=1, color='black')
 
-ax_dec.errorbar(R.x, R.y, xerr= R.xerr, yerr= R.yerr, fmt='o', markersize=2, capsize=3, linewidth=1, color='black')
 ax_dec.plot(xgrid, np.exp(-splines.Itotal(R.weights,0)), color='orangered')
+ax_dec.errorbar(R.x, R.y, xerr= R.xerr, yerr= R.yerr, fmt='o', markersize=2, capsize=3, linewidth=1, color='black')
 
 deltaR =  np.exp(-splines.Itotal(R.weights,0)) -F.fratio*np.exp(-splines.Itotal(F.weights,0))
-ax_cur.plot(xgrid, deltaR, color='grey', label=r'$\delta R$')
+ax_cur.plot(xgrid, deltaR, color='grey', label=r'$R(t)-\eta_i\, F_i(t)$')
 
-ax_cur.plot(xgrid, minout.x[-1]*splines.dItotal_dx(R.weights)*np.exp(-splines.Itotal(R.weights,0)), color='blue', label=r'$-\tau\,\frac{dR_{i}(t)}{dt}$')
+ax_cur.plot(xgrid, minout.x[-1]*splines.dItotal_dx(R.weights)*np.exp(-splines.Itotal(R.weights,0)), color='blue', 
+            label=r'$-\tau\,\frac{\partial R(t)}{\partial t}$')
 ax_cur.legend(loc="upper right", frameon=False, bbox_to_anchor=(0.97,0.94), fontsize=14)
 
 taus = deltaR/(splines.dItotal_dx(R.weights)*np.exp(-splines.Itotal(R.weights,0)) )/ve
@@ -379,6 +384,12 @@ ax_fed.tick_params(axis="both", direction="in", length=6)
 ax_dec.tick_params(axis="both", direction="in", length=6)
 ax_cur.tick_params(axis="both", direction="in", length=6)
 ax_tau.tick_params(axis="both", direction="in", length=6)
+
+ax_tau.set_xlabel(r'Time ($ps$)', labelpad=8)
+ax_tau.set_ylabel(r'$\tau\; (ps)$')
+ax_fed.set_ylabel(r'$F_{i}(t)$')
+ax_dec.set_ylabel(r'$R(t)$')
+ax_cur.set_ylabel(r'$-\tau\,({\partial R}/{\partial t})$')
 
 plt.setp(ax_fed.get_xticklabels(), visible=False)
 plt.setp(ax_dec.get_xticklabels(), visible=False)
