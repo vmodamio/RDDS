@@ -21,6 +21,17 @@ ions reach the degrader. That means, knowing the ion velocity within the
 target to degrader gap, one can relate the gap distance, measured within
 micrometer precission, into flying times on the order of picoseconds.
 
-The use of RDDS methods with large acceptance spectrometers...
+Experiments employing RDDS techniques together with large acceptance
+mass spectrometers allow measurements in a broad selection of nuclei. 
+Special attention need to be placed regarding the degrader stopping
+power. It needs to allow the isotopes to leave with enough energy to be
+identified upstream, but at the same time it needs to be thick enough so
+the Doppler difference allows to resolve the two peak components.
+Additionally, thicker degraders introduce more uncertainties in the
+effective plunger distance. With short-lived excited states, the amount
+of gamma-rays decaying inside the degrader will produce a distribution 
+in the energy spectrum between the two peak centroids.
 
+Large acceptance mass spectrometers however, will identify the isotopes
+with a broad distribution of velocities. 
  
