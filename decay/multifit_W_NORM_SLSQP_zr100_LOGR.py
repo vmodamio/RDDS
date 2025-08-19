@@ -64,7 +64,7 @@ yRt = (yR +feeding*yRf)/(1.0+feeding)
 #for i,dis in enumerate(xT):
 #    print(f'{dis}   {10000.0*testF[i]}   100.0   {10000.0*(1.0-testF[i])}    100.0')
 
-tauguess = 5.0
+tauguess = 20.0
 terr = 1.0
 clight = 299.79 # um/ps
 beta0 = 0.103
@@ -94,7 +94,7 @@ class decay():
         self.__class__.instances.append(self)
 
         with open(self.fname, 'r') as reader:
-            xx, yy, xerr, yerr = [], [], [], []
+            xx, yy, xerr, yerr ,ss, serr, uu, uerr = [], [], [], [], [], [], [], []
             for line in reader.readlines():
                 data = line.split()
                 xx.append(float(data[0]))
@@ -103,13 +103,23 @@ class decay():
                 u = float(data[1])
                 ue = float(data[2])
                 yy.append(u/(u+s))
-                e1 = ue*(s/(u+s)/(u+s))
-                e2 = se*(u/(u+s)/(u+s))
-                yerr.append(math.sqrt(e1*e1+e2*e2))
+                ss.append(s)
+                serr.append(se)
+                uu.append(u)
+                uerr.append(ue)
+                #e1 = ue*(s/(u+s)/(u+s))
+                #e2 = se*(u/(u+s)/(u+s))
+                #yerr.append(math.sqrt(e1*e1+e2*e2))
+
+        self.ss = np.array(ss)
+        self.serr = np.array(serr)
+        self.uu = np.array(uu)
+        self.uerr = np.array(uerr)
 
         self.x = np.array(xx)
         self.y = np.array(yy)
-        self.yerr = np.array(yerr)
+        #self.yerr = np.array(yerr)
+        self.yerr = self.uu/np.power(self.uu +self.ss, 2)*np.sqrt(np.power(self.ss * self.uerr/self.uu,2) +np.power(self.serr,2) )
         self.xerr = 0.1
 
         self.Fyerr = np.array([])
@@ -197,7 +207,7 @@ def Jac(x, R, F):
     dexp = np.array([R.isplines.I(i) for i in range(1, R.isplines.n + 1)])
     J[nx1+nx2:2*nx1+nx2,:n] = np.transpose(di +fexp*dexp)
     J[nx1+nx2:2*nx1+nx2,n:2*n] = np.transpose(-fexp*dexp) 
-    J[nx1+nx2:2*nx1+nx2, 2*n] = -np.transpose(R.dA.dot(x[:n]))
+    J[nx1+nx2:2*nx1+nx2, 2*n] = np.transpose(-R.dA.dot(x[:n]))
     #return J
     return rW(R,F) @ J
 
@@ -278,15 +288,17 @@ bounds.append([0.05,None])
 x0 = [0.1]*(R.isplines.n +F.isplines.n)
 x0.append(tauguess)
 
-## MINIMIZATION
+## MINIMIZATION  L-BFGS-B, SLSQP is faster and converges to the same value
 #minout = minimize(fnm, x0, args=(R, F), method='SLSQP', jac= gradient, bounds = bounds, options={'disp': True, 'ftol': ftol})
-minout = minimize(fnm, x0, args=(R, F), method='SLSQP', jac= '2-point', bounds = bounds, options={'disp': True, 'ftol': ftol})
+minout = minimize(fnm, x0, args=(R, F), method='SLSQP', jac= gradient, bounds = bounds, options={'disp': True, 'ftol': ftol})
 #minout = minimize(fnm, x0, args=(R, F), method='SLSQP', jac= '2-point', bounds = bounds, options={'disp': True, 'ftol': ftol})
 R.weights = minout.x[:R.isplines.n]
 F.weights = minout.x[R.isplines.n : R.isplines.n +F.isplines.n]
 
-#Rerr = np.sqrt(ftol*np.diag(minout.hess_inv.todense())[:R.isplines.n])
-#print(minout.hess_inv)
+#hesserr = np.sqrt(ftol*np.diag(minout.hess_inv.todense())[:R.isplines.n])
+#hesserr = np.sqrt(ftol*np.diag(minout.hess_inv.todense()))
+#print(minout.hess_inv.tomatrix())
+#print(hesserr)
 
 
 #print('SLSQP spline weights: ')
