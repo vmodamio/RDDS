@@ -77,7 +77,7 @@ class rdds_app(QtWidgets.QMainWindow):
         self.splineorder.setRange(2,8)
         self.splineorder.setValue(3)
         self.knots = QtWidgets.QSpinBox()
-        self.knots.setRange(2,self.maxKnots)
+        self.knots.setRange(3,self.maxKnots)
         self.knots.setValue(3)
         self.numdatapoints = 0
         self.sbase = 0
