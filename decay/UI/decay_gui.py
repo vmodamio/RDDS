@@ -158,6 +158,25 @@ class rdds_app(QtWidgets.QMainWindow):
         layout_decay_settings.addWidget(QtWidgets.QLabel("ndf")   , 5, 4)
         layout_decay_settings.addWidget(self.fit_ndf   , 5, 5)
 
+        self.graph_coords = QtWidgets.QWidget()
+        self.xcoord= QtWidgets.QLineEdit()
+        self.xcoord.setObjectName('readout')
+        self.xcoord.setAlignment(Qt.AlignRight)
+        self.xcoord.setReadOnly(True)
+        self.xcoord.setText(f'0.00')
+        self.ycoord= QtWidgets.QLineEdit()
+        self.ycoord.setObjectName('readout')
+        self.ycoord.setAlignment(Qt.AlignRight)
+        self.ycoord.setReadOnly(True)
+        self.ycoord.setText(f'0.00')
+        layout_coords = QtWidgets.QHBoxLayout()
+        layout_coords.addWidget(QtWidgets.QLabel('X: '))
+        layout_coords.addWidget(self.xcoord)
+        layout_coords.addWidget(QtWidgets.QLabel('Y: '))
+        layout_coords.addWidget(self.ycoord)
+        self.graph_coords.setLayout(layout_coords)
+
+
         layout_fit_settings.addWidget(QtWidgets.QLabel("Tau guess (ps)"),           0, 0)
         layout_fit_settings.addWidget(self.tauguess,  0, 1)
 
@@ -221,26 +240,39 @@ class rdds_app(QtWidgets.QMainWindow):
             self.node_layout.addRow(f'k{i}', self.nodes[i])
             self.nodes[i].setMaximumWidth(100)
             self.nodes[i].lineEdit().setAlignment(Qt.AlignRight)
-            #self.nodes[i].lineEdit().editingFinished.connect(self.changeNode)
             self.nodes[i].valueChanged.connect(self.changeNode)
+            self.nodes[i].setKeyboardTracking(False)
         #layout_left_column.addLayout(self.node_layout)
         self.button_arrangeLog = QtWidgets.QPushButton("Arrange Log from K1")
         self.button_arrangeLog.clicked.connect(self.setLog)
         self.button_arrangeLin = QtWidgets.QPushButton("Arrange Lin til Kn")
         self.button_arrangeLin.clicked.connect(self.setLin)
+        self.button_set_to_last = QtWidgets.QPushButton("Adjust to last X")
+        self.button_set_to_last.clicked.connect(self.setUpLim)
         self.node_buttons_layout.addWidget(self.button_arrangeLog)
         self.node_buttons_layout.addWidget(self.button_arrangeLin)
-        self.node_settings_layout.addLayout(self.node_buttons_layout)
-        self.node_settings_layout.addLayout(self.node_layout)
+        self.node_buttons_layout.addWidget(self.button_set_to_last)
+        self.node_buttons_layout.addStretch()
+        self.node_buttons_layout.addWidget(self.graph_coords)
+        self.node_settings_layout.addLayout(self.node_buttons_layout, 2)
+        self.node_settings_layout.addLayout(self.node_layout, 3)
 
         layout_left_column.addWidget(self.node_settings)
         layout_left_column.addWidget(fit_settings)
         self.setNodes()
 
+        self.rdds.canvas.mpl_connect('motion_notify_event', self.mouse_on_plot)
         self.setNumDataPoints()
         self.rdds.runFit()
         self.rdds.drawFigure()
 
+
+    def mouse_on_plot(self, event):
+        if event.inaxes:
+            x_data = event.xdata
+            y_data = event.ydata
+            self.xcoord.setText(f"{x_data:.2f}")
+            self.ycoord.setText(f"{y_data:.2f}")
 
     def runFit(self):
         #setDecay()
@@ -269,13 +301,25 @@ class rdds_app(QtWidgets.QMainWindow):
         self.rdds.clearMesh()
         self.rdds.drawMesh()
         self.rdds.canvas.draw()
+    def setUpLim(self):
+        self.rdds.upperL = np.maximum(self.rdds.R.x.max(), self.rdds.F.x.max())
+        self.rdds.mesh[-1] = self.rdds.upperL + 1.0
+        self.setDecay(self.fileR)
+        self.setFeeder(self.fileF)
+        self.setNodes()
+        self.rdds.clearMesh()
+        self.rdds.drawMesh()
+        self.rdds.canvas.draw()
 
     def changeNode(self, value):
         emmiter = self.sender()
         idx = self.nodes.index(emmiter)
-        #value = float(self.nodes_lineEdit[idx].text())
-        print(f'Node [{idx}] changed to value: {value} ')
         self.rdds.mesh[idx] = value
+        if not np.all(self.rdds.mesh[:-1] <= self.rdds.mesh[1:]):
+            args = np.argsort(self.rdds.mesh)
+            idx = args.tolist().index(idx)
+            self.rdds.mesh = np.sort(self.rdds.mesh)
+            self.setNodes()
         if idx == 1:
             self.rdds.mesh_log_first = value
         elif idx == (self.knots.value() -1):
