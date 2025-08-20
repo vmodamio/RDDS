@@ -1,0 +1,181 @@
+
+ocl_app {
+        background-color: #cfcfcf;  
+}
+
+QFrame#left {
+        background-color: #d1cfd0;
+}
+
+QLabel {
+        font-size: 10pt;
+        font-family: 'NotoSansMono';
+        color: #111111;
+}
+
+
+QPushButton {
+        background-color: #c8c6bf;
+        color: #000000; 
+}
+
+*[powered="true"]{
+        background-color: #00ff10;
+}
+
+*[powered="false"]{
+        background-color: #101010;
+}
+
+PowerBox {
+        font-size: 11pt;
+        font-family: 'NotoSansMono';
+        color: #ffffff;
+}
+
+QComboBox {
+        background-color: #ffc600;
+        color: #000000;
+}
+
+QDoubleSpinBox {
+        font-size: 10pt;
+        background-color: #ffffff;
+        color: #111111;
+}
+
+QDoubleSpinBox#readonly {
+        font-size: 10pt;
+        background-color: #e2eaf2;
+        color: #111111;
+}
+
+QLabel#title {
+        font-size: 16pt;
+        font-family: 'SourceSansPro-Regular';
+        color: #464244;
+}
+
+QLabel#clock {
+        font-size: 22pt;
+        font-family: 'NotoSansMono-Bold';
+        font-weight: bold;
+}
+
+QLabel#date {
+        font-size: 18pt;
+        font-family: 'NotoSansMono-Bold';
+}
+
+QLineEdit#readout {
+        background-color: #f7f3c6;
+        font-size: 10pt;
+        /*background-color: #fff4ae; 
+        font-family: 'NotoSansMono-Bold';
+        background-color: #fff8b6;
+        font-weight: bold; */
+}
+
+QLineEdit#input {
+        background-color: #ffffff;
+        font-size: 14pt;
+        font-family: 'SourceSansPro-Regular';
+        font-weight: bold;
+}
+
+TaskLogger QTableView {
+	background: '#000000';
+}
+
+
+QTableView::item {
+	border: 0px;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+QTableView {
+	background: '#fafafa';
+        alternate-background-color: '#f3f3f3';
+}
+
+
+QScrollBar:vertical {
+	border-color: #787878;
+	border-width: 0px;
+	border-radius: 4px;
+	border-style: solid;
+    	background-color: #626262;
+	width: 12px;
+	margin: 2px 4px 2px 2px;
+}
+QScrollBar::handle:vertical {
+	background-color: #ebebeb;
+	border-radius: 3px;
+	width: 8px;
+	min-height: 28px;
+}
+
+QScrollBar::add-line:vertical {
+	border: none;
+	background: none;
+}
+
+QScrollBar::sub-line:vertical {
+	border: none;
+	background: none;
+}
+
+/*
+Magnet QCheckBox {
+	spacing: 10px;
+	color: #ffffff;
+}
+
+Magnet QCheckBox::indicator {
+	width: 16px;
+	height: 16px;
+	background: #000000;
+	color: #fafafa;
+	border: 1px solid #a0a0a0;
+}
+
+Magnet QCheckBox::indicator:checked {
+	image: url(./Resources/checkbox_checked.svg);
+}
+*/
+
+QCheckBox {
+	spacing: 10px;
+	color: #ffffff;
+}
+
+QCheckBox::indicator {
+	width: 16px;
+	height: 16px;
+	background: #000000;
+	color: #fafafa;
+	border: 1px solid #a0a0a0;
+}
+
+QCheckBox::indicator:checked {
+	image: url(./Resources/checkbox_checked.svg);
+}
+
+
+statusBox {
+        background: #121212;
+        color: #ffffff; 
+        placeholder-text-color: #f04070;
+}
+
+statusBox[ok = "true"] {
+        background: #121212;
+        placeholder-text-color: #40ff52;
+}
+
+statusBox QAbstractItemView {
+        background: #121212;
+        color: #ffdffb;
+} 
+
