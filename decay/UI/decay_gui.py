@@ -429,8 +429,6 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     QtGui.QFontDatabase.addApplicationFont("Resources/SourceSansPro/SourceSansPro-Regular.ttf")
-    QtGui.QFontDatabase.addApplicationFont("Resources/SourceSansPro/SourceSansPro-Bold.ttf")
-    QtGui.QFontDatabase.addApplicationFont("Resources/NotoSansMono/NotoSansMono-VariableFont_wdth,wght.ttf")
     myqss = open('Resources/gui.qss').read()
     app.setStyleSheet(myqss)
     myapp = rdds_app()
