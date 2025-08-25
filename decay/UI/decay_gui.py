@@ -413,8 +413,6 @@ class rdds_app(QtWidgets.QMainWindow):
             self.rdds.canvas.figure.savefig(file_path)
             print(f"Figure saved to: {file_path}")
 
-
-
 class ClickableLineEdit(QtWidgets.QLineEdit):
     clicked = Signal(int) # Define a custom signal
     def __init__(self, decay, parent=None):

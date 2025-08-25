@@ -6,30 +6,16 @@ tauR = 20.0
 frt = 0.75
 testF = np.exp(-xT/tauF)
 testR = (1-frt)*np.exp(-xT/tauR) + frt*tauR/(tauF-tauR)*(np.exp(-xT/tauF) -np.exp(-xT/tauR)) +frt*testF
+
+deviation = 0.03
+errF = np.random.uniform(low = -deviation, high= deviation, size=10)
+errR = np.random.uniform(low = -deviation, high= deviation, size=10)
+
+testF = testF +errF*testF
+testR = testR +errR*testR
+
 for i,dis in enumerate(xT):
     print(f'{dis}   {testR[i]} ')
 for i,dis in enumerate(xT):
     print(f'{dis}   {testF[i]} ')
 
-"""
-1.0   0.9694174167544428 
-5.0   0.7855190736185268 
-9.0   0.5875227383798585 
-13.0   0.42122545414877155 
-17.0   0.2946662146220411 
-21.0   0.20305206682736004 
-25.0   0.1385952873425088 
-29.0   0.0940199690396808 
-33.0   0.0635252669240091 
-37.0   0.04280773175224675 
-1.0   0.8187307530779818 
-5.0   0.36787944117144233 
-9.0   0.16529888822158653 
-13.0   0.07427357821433388 
-17.0   0.03337326996032608 
-21.0   0.014995576820477703 
-25.0   0.006737946999085467 
-29.0   0.0030275547453758153 
-33.0   0.0013603680375478939 
-37.0   0.0006112527611295723 
-"""
