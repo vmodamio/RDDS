@@ -1,5 +1,6 @@
 import itertools
 import math
+import sys
 import numpy as np
 import pandas as pd
 import scipy.optimize
@@ -51,6 +52,8 @@ class decay():
             xx, yy, xerr, yerr = [], [], [], []
             for line in reader.readlines():
                 if line.lstrip(' ')[0] == '#':  # is comment
+                    continue
+                if not line.strip():  # empty line
                     continue
                 else:
                     data = line.split()
