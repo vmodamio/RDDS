@@ -1,3 +1,17 @@
+# Merging codebase
+
+This branch is for merging the implementations of vm and jsh, so we can work on the same
+codebase. Checkpoints
+
+- [ ] Spline interface that's independent of the spline type, and Ispline implementation
+- [ ] Data structure
+- [ ] Data file reader
+- [ ] Loss function
+	- [ ] handle x error
+	- [ ] difference == derivative constraint
+	- [ ] handle zero error
+- [ ] optimization algorithm
+
 # RDDS
 Techniques for lifetime measurements using the Recoil Distance Doppler Shift method
 
