@@ -12,6 +12,14 @@ codebase. Checkpoints
 	- [ ] handle zero error
 - [ ] optimization algorithm
 
+## Coding conventions
+
+We should be as consistent as is reasonable.
+
+- [pep 8](https://peps.python.org/pep-0008)
+- [numpy docstring style](https://numpydoc.readthedocs.io/en/stable/format.html#sections) 
+
+
 # RDDS
 Techniques for lifetime measurements using the Recoil Distance Doppler Shift method
 
