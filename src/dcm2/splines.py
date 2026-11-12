@@ -3,15 +3,14 @@
 splines
 =======
 
-Implements the base class `Spline` which provides an interface to
-calculate splines and their derivative for a given order and knot
-placement, and subclasses that implement specific spline bases.
+Provides an interface to calculate splines and their derivative for a
+given order and knot placement, and implements specific spline bases.
 
 Spline implementations
 ----------------------
-`ISpline`
+I-spline
     Monotonically increasing spline basis.
-`MSpline`
+M-spline
     Non-negative spline basis, used in the computation of I-splines.
 """
 
