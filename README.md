@@ -3,7 +3,7 @@
 This branch is for merging the implementations of vm and jsh, so we can work on the same
 codebase. Checkpoints
 
-- [ ] Spline interface that's independent of the spline type, and Ispline implementation
+- [x] Spline interface that's independent of the spline type, and Ispline implementation
 - [ ] Data structure
 - [ ] Data file reader
 - [ ] Loss function

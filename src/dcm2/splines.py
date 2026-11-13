@@ -13,18 +13,45 @@ I-spline
 M-spline
     Non-negative spline basis, used in the computation of I-splines.
 """
+from dataclasses import dataclass
 
 from numba import jit
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
+
+@dataclass
+class EvaluatedSpline:
+    """Dataclass for an evaluated spline.
+
+    Attributes
+    ----------
+    knots : array of float
+        Knot vector.
+    degree : int
+        Spline degree.
+    order : int
+        Spline order.
+    x : array of float
+        Poins at which the spline has been evaluated
+    basis : array of float
+        Spline basis evaluated at `x`.
+    derivative : array of float
+        Derivative of spline basis, evaluated at `x`.
+    """
+    knots: NDArray[float]
+    degree: int
+    order: int
+    x: NDArray[float]
+    basis: NDArray[float]
+    derivative: NDArray[float]
+
 
 def evaluate(
         kind: str,
         x: ArrayLike,
         degree: int,
         inner_knots: ArrayLike,
-        derivative: int = 0
-        ) -> NDArray:
+        ) -> EvaluatedSpline:
     """Build and evaluate the spline basis at the given points.
 
     A more convenient way of calling the spline functions, with input
@@ -41,14 +68,11 @@ def evaluate(
     knots : ArrayLike
         Positions of the spline knots. The multiplicity of the first
         and last knots is determined from the spline degree.
-    derivative : int, default 0
-        Order of the derivative to compute. The default value 0 computes
-        the spline basis.
 
     Returns
     -------
-    array
-        Spline basis or its derivative evaluated at `x`.
+    EvaluatedSpline
+        Spline basis and derivative evaluated at `x`.
     """
     # validate input parameters
     if not np.all(inner_knots[:-1] < inner_knots[1:]):
@@ -60,50 +84,50 @@ def evaluate(
             "x cannot contain values outside the knot range "
             f"[{inner_knots[0]}; {inner_knots[-1]}]."
             )
-    knots = close_knot_vector(inner_knots, degree)
-
-    if derivative != 0:
-        raise NotImplementedError("I haven't done this yet. -jsh")
 
     if kind == 'I':
-        basis = compute_ispline_basis(x, degree, knots)
+        order = degree
+        knots = close_knot_vector(inner_knots, order)
+        basis, derivative = compute_ispline(x, order, knots)
     elif kind == 'M':
-        basis = compute_mspline_basis(x, degree, knots)
+        order = degree + 1
+        knots = close_knot_vector(inner_knots, order)
+        basis, derivative = compute_mspline(x, order, knots)
     else:
         raise ValueError(f"Spline kind must be one of {'I', 'M'}, not {kind}.")
-    return basis
+    return EvaluatedSpline(knots, degree, order, x, basis, derivative)
 
-def close_knot_vector(knots: ArrayLike, degree: int):
-    """Add knots at the start and end to match desired spline degree.
+def close_knot_vector(knots: ArrayLike, order: int):
+    """Add knots at the start and end to match desired spline order.
 
     Parameters
     ----------
     knot_positions : array_like
         Desired knot positions including endpoints.
-    degree : int
-        Degree of the spline
+    order : int
+        Order of the spline
 
     Returns
     -------
     array of float
         sequence of knots with added multiplicity of the first and last
-        knot to match the spline degree.
+        knot to match the spline order.
 
     Notes
     -----
-    A spline of degree :math:`k` has a closed knot vector :math:`t` if
+    A spline of order :math:`k` has a closed knot vector :math:`t` if
 
     - :math:`t_i = ... = t_{k+1}` and :math:`t_{n+1} = ... = t_{n+k+1}`,
     - all remaining knots have multiplicity at most :math:`k`.
     """
     knots = np.concatenate(
-        [[knots[0]]*degree, knots[1:-1], [knots[-1]]*degree],
+        [[knots[0]]*order, knots[1:-1], [knots[-1]]*order],
         dtype=float
         )
     return knots
 
 @jit
-def compute_ispline_basis(x: ArrayLike, degree: int, knots: ArrayLike
+def compute_ispline(x: ArrayLike, order: int, knots: ArrayLike
         ) -> NDArray:
     """Compute an I-spline basis
 
@@ -111,8 +135,8 @@ def compute_ispline_basis(x: ArrayLike, degree: int, knots: ArrayLike
     ----------
     x : array_like of float
         Points at which to evaluate the spline basis functions.
-    degree : int
-        Degree of the spline.
+    order : int
+        Order of the spline.
     knots : array_like of float
         Spline knot values, including repeated knots.
 
@@ -126,31 +150,42 @@ def compute_ispline_basis(x: ArrayLike, degree: int, knots: ArrayLike
     m_knots[1:-1] = knots
     m_knots[0] = knots[0]
     m_knots[-1] = knots[-1]
-    m_spline = compute_mspline_basis(x, degree + 1, m_knots)
+    m_basis, m_derivative = compute_mspline(x, order + 1, m_knots)
 
-    n = len(knots) - degree
-    basis = np.zeros((n, len(x)), dtype=float)
+    n = len(knots) - order
+    basis, derivative = np.zeros((2, n, len(x)), dtype=float)
 
     for i in range(n):
         below = (x < m_knots[i])
-        above = (x > m_knots[i + degree + 1])
+        above = (x > m_knots[i + order + 1])
         basis[i] = np.sum(
             np.vstack((
 #                   below *np.zeros_like(x),  # unnecessary
                 above*np.ones_like(x),
                 (~below & ~above)*np.sum(
-                    (m_knots[i+degree+2:] - m_knots[i+1:-degree-1])
-                    *m_spline[i+1:].T
-                    /(degree + 1),
+                    (m_knots[i+order+2:] - m_knots[i+1:-order-1])
+                    *m_basis[i+1:].T
+                    /(order + 1),
                     axis=1
                     ),
                 )),
             axis=0
             )
-    return basis
+        derivative[i] = np.sum(
+            np.vstack((
+                (~below & ~above)*np.sum(
+                    (m_knots[i+order+2:] - m_knots[i+1:-order-1])
+                    *m_derivative[i+1:].T
+                    /(order + 1),
+                    axis=1
+                    ),
+                )),
+            axis=0
+            )
+    return np.stack((basis, derivative))
 
 @jit
-def compute_mspline_basis(x: ArrayLike, degree: int, knots: ArrayLike
+def compute_mspline(x: ArrayLike, order: int, knots: ArrayLike
         ) -> NDArray:
     """Compute an M-spline basis
 
@@ -158,8 +193,8 @@ def compute_mspline_basis(x: ArrayLike, degree: int, knots: ArrayLike
     ----------
     x : array_like of float
         Points at which to evaluate the spline basis functions.
-    degree : int
-        Degree of the spline.
+    order : int
+        Order of the spline.
     knots : array_like of float
         Spline knot values, including repeated knots.
 
@@ -169,28 +204,46 @@ def compute_mspline_basis(x: ArrayLike, degree: int, knots: ArrayLike
         Evaluated M-spline basis with each row corresponding to one
         basis function.
     """
-    n = len(knots) - degree
-    basis = np.zeros((n+1, len(x)), dtype=float)
+    n = len(knots) - order
+    basis, derivative = np.zeros((2, n+1, len(x)), dtype=float)
 
     k = 1
     for i in range(n):
-        if knots[i] == knots[i+k]:
+        if knots[i] == knots[i+k]:  # avoid zerodivision
             basis[i] = np.zeros_like(x)
         else:
             basis[i] = (
                 ((knots[i] <= x) & (x < knots[i+1]))/(knots[i+1] - knots[i])
                 )
-    basis[n-1] += (knots[n] == x)/(knots[n-1] - knots[n-2])  # boundary
-
-    while k < degree:
-        k += 1
+#        derivative[i] = np.zeros_like(x)  # unnecessary
+    basis[n-1] += (knots[n] == x)/(knots[n] - knots[n-1])  # boundary
+    k += 1
+    while k <= order:
         for i in range(n):
-            if knots[i] == knots[i+k]:
+            if knots[i] == knots[i+k]:  # avoid zerodivision
                 basis[i] *= 0
+                derivative[i] *= 0
             else:
-                basis[i] = (
-                    k*((x - knots[i])*basis[i] + (knots[i+k] - x)*basis[i+1])
+                # derivative must be updated before basis
+                derivative[i] = (
+                    (
+                        ((knots[i] <= x) & (x < knots[i+k]))
+                        | (x == knots[n])  # boundary
+                        )
+                    *k*(
+                        (x - knots[i])*derivative[i] + basis[i]
+                        + (knots[i+k] - x)*derivative[i+1] - basis[i+1]
+                        )
                     /((k - 1)*(knots[i+k] - knots[i]))
                     )
-    return basis[:-1]  # the last element is zero
+                basis[i] = (
+                    (
+                        ((knots[i] <= x) & (x < knots[i+k]))
+                        | (x == knots[n])  # boundary
+                        )
+                    *k*((x - knots[i])*basis[i] + (knots[i+k] - x)*basis[i+1])
+                    /((k - 1)*(knots[i+k] - knots[i]))
+                    )
+        k += 1
 
+    return np.stack((basis[:-1], derivative[:-1]))  # the last element is zero
